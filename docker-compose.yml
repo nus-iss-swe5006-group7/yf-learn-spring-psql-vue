@@ -1,0 +1,73 @@
+networks:
+  backend-db-net:
+    name: backend-db-net
+  backend-frontend-net:
+    name: backend-frontend-net
+
+volumes:
+  db-data:
+    name: db-data
+
+services:
+  ### 
+  # https://github.com/eugenp/tutorials/tree/master/spring-boot-modules/spring-boot-vue
+  # frontend:
+
+  ###
+  backend:
+    build:
+      context: ./src/backend
+      dockerfile: Dockerfile
+    image: restaurant_svc
+    container_name: restaurant_svc
+    environment:
+      JAVA_TOOL_OPTIONS: -Xms1024m -Xmx16096m   # -Xmx4096m
+      MAVEN_OPTS: -Xmx4096m 
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB}
+      PGUSER: ${POSTGRES_USER}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    ulimits:
+      nofile:
+        soft: 65536 # 1048576
+        hard: 65536 # 1048576
+
+    volumes:
+      - ./src/backend:/workspace/src/backend
+    # command: bash
+    # ports:
+    #   - 8090:8090
+    depends_on:
+      - database
+    network_mode: host
+
+  ###
+  database: 
+    image: postgres:15.4-bookworm
+    container_name: psqldb
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+    environment: 
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB}
+      PGUSER: ${POSTGRES_USER}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+
+    restart: unless-stopped
+
+    stop_grace_period: 120s
+
+    healthcheck:
+      test: psql -h localhost --username=${POSTGRES_USER} --list
+      interval: 5s
+      timeout: 15s
+      retries: 5
+
+    # networks:
+      # - backend-db-net
+    network_mode: host

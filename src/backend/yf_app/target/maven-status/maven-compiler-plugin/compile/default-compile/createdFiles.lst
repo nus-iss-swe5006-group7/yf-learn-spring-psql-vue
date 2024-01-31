@@ -1,0 +1,5 @@
+yf/spring/controllers/BookController.class
+yf/spring/service/BookService.class
+yf/spring/model/Book.class
+yf/spring/repository/BookRepository.class
+yf/spring/MainApplication.class
